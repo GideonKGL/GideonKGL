@@ -1,0 +1,69 @@
+# Render Blueprint for the Guardian Tracker platform.
+#
+# Provisions a managed PostgreSQL database, the backend API (Node web service),
+# and the web portal (static site). Deploy by creating a new Blueprint in the
+# Render dashboard pointing at this repository (or `render blueprint launch`).
+#
+# After the first deploy, confirm the generated service URLs. Render names
+# services `https://<name>.onrender.com`; if a name is taken it gets a random
+# suffix, in which case update the cross-referenced URLs below (WEB_ORIGIN /
+# DESKTOP_ORIGIN on the API and VITE_API_BASE_URL / VITE_SOCKET_URL on the web).
+
+databases:
+  - name: guardian-tracker-db
+    databaseName: guardian_tracker
+    user: guardian
+    plan: free
+
+services:
+  # Backend API: Express + Prisma + Socket.IO.
+  - type: web
+    name: guardian-tracker-api
+    runtime: node
+    plan: free
+    # Install only the backend workspace (avoids the Electron download from the
+    # desktop workspace), generate the Prisma client, then compile TypeScript.
+    buildCommand: npm ci -w @guardian/backend && npm run prisma:generate -w @guardian/backend && npm run build -w @guardian/backend
+    # Apply migrations and seed roles/admin (both idempotent) before starting.
+    startCommand: npm run migrate -w @guardian/backend && npm run seed -w @guardian/backend && node backend/dist/server.js
+    healthCheckPath: /api/health/db
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      # Render injects PORT automatically; the server reads it via env.PORT.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: guardian-tracker-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: WEB_ORIGIN
+        value: https://guardian-tracker-web.onrender.com
+      - key: DESKTOP_ORIGIN
+        value: https://guardian-tracker-web.onrender.com
+
+  # Web portal: React + Vite single-page app served as a static site.
+  - type: web
+    name: guardian-tracker-web
+    runtime: static
+    buildCommand: npm ci -w @guardian/web && npm run build -w @guardian/web
+    staticPublishPath: web/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_BASE_URL
+        value: https://guardian-tracker-api.onrender.com/api/v1
+      - key: VITE_SOCKET_URL
+        value: https://guardian-tracker-api.onrender.com
+      # Optional: set a real key in the dashboard to enable the Live Map tiles.
+      - key: VITE_GOOGLE_MAPS_API_KEY
+        sync: false
+    routes:
+      # SPA fallback so client-side routes resolve to index.html.
+      - type: rewrite
+        source: /*
+        destination: /index.html
