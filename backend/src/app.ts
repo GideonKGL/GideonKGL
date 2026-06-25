@@ -5,6 +5,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { allowedOrigins } from "./config/env.js";
 import { apiRouter } from "./routes/index.js";
+import { healthRouter } from "./modules/health/health.routes.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
 export const createApp = () => {
@@ -30,6 +31,7 @@ export const createApp = () => {
     })
   );
 
+  app.use("/api/health", healthRouter);
   app.use("/api/v1", apiRouter);
   app.use(notFound);
   app.use(errorHandler);
