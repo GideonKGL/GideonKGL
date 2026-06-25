@@ -1,19 +1,18 @@
 # Render Blueprint for the Guardian Tracker platform.
 #
-# Provisions a managed PostgreSQL database, the backend API (Node web service),
-# and the web portal (static site). Deploy by creating a new Blueprint in the
-# Render dashboard pointing at this repository (or `render blueprint launch`).
+# Provisions the backend API (Node web service) and the web portal (static
+# site), wired to an EXISTING Render PostgreSQL database. Deploy by creating a
+# new Blueprint in the Render dashboard pointing at this repository.
+#
+# DATABASE_URL is `sync: false`, so Render prompts for it when the Blueprint is
+# applied. Paste the database's "Internal Database URL" (recommended: the API is
+# pinned to the `ohio` region to match, low latency, no SSL flag needed) or its
+# "External Database URL" with `?sslmode=require` appended.
 #
 # After the first deploy, confirm the generated service URLs. Render names
 # services `https://<name>.onrender.com`; if a name is taken it gets a random
 # suffix, in which case update the cross-referenced URLs below (WEB_ORIGIN /
 # DESKTOP_ORIGIN on the API and VITE_API_BASE_URL / VITE_SOCKET_URL on the web).
-
-databases:
-  - name: guardian-tracker-db
-    databaseName: guardian_tracker
-    user: guardian
-    plan: free
 
 services:
   # Backend API: Express + Prisma + Socket.IO.
@@ -21,6 +20,7 @@ services:
     name: guardian-tracker-api
     runtime: node
     plan: free
+    region: ohio
     # Install only the backend workspace (avoids the Electron download from the
     # desktop workspace), generate the Prisma client, then compile TypeScript.
     buildCommand: npm ci -w @guardian/backend && npm run prisma:generate -w @guardian/backend && npm run build -w @guardian/backend
@@ -33,10 +33,10 @@ services:
       - key: NODE_ENV
         value: production
       # Render injects PORT automatically; the server reads it via env.PORT.
+      # Existing Render PostgreSQL: set this when applying the Blueprint
+      # (Internal URL preferred, or External URL with ?sslmode=require).
       - key: DATABASE_URL
-        fromDatabase:
-          name: guardian-tracker-db
-          property: connectionString
+        sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
