@@ -1,0 +1,12 @@
+{
+  "name": "@guardian/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"vite --host 0.0.0.0 --port 5174\" \"tsc -p electron/tsconfig.json --watch\" \"wait-on http://localhost:5174 dist-electron/main.js && electron .\"",
+    "build": "tsc -b && tsc -p electron/tsconfig.json && vite build",
+    "start": "electron ."
+  }
+}
