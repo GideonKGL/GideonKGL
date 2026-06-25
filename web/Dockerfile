@@ -13,7 +13,6 @@ ARG VITE_SOCKET_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/web/node_modules ./web/node_modules
 COPY . .
 RUN npm run build -w @guardian/web
 

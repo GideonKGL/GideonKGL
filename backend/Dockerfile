@@ -9,7 +9,6 @@ RUN npm ci -w @guardian/backend
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/backend/node_modules ./backend/node_modules
 COPY . .
 RUN npm run prisma:generate -w @guardian/backend && npm run build -w @guardian/backend
 
