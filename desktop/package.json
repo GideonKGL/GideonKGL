@@ -1,0 +1,28 @@
+{
+  "name": "@guardian/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"vite --host 0.0.0.0 --port 5174\" \"tsc -p electron/tsconfig.json --watch\" \"wait-on http://localhost:5174 dist-electron/main.js && electron .\"",
+    "build": "tsc -b && tsc -p electron/tsconfig.json && vite build",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "electron": "^42.5.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "socket.io-client": "^4.8.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0",
+    "wait-on": "^9.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3"
+  }
+}

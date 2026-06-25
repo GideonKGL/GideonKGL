@@ -1,0 +1,16 @@
+{
+  "name": "securitatem-defensionis-guardian-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "web",
+    "desktop"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "backend:dev": "npm run dev -w @guardian/backend",
+    "web:dev": "npm run dev -w @guardian/web",
+    "desktop:dev": "npm run dev -w @guardian/desktop"
+  }
+}
