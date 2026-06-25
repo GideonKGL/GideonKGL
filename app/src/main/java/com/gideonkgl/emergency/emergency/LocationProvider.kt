@@ -45,11 +45,21 @@ class LocationProvider(private val context: Context, private val logger: Emergen
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val cancellationSignal = CancellationSignal()
+            var delivered = false
+            mainHandler.postDelayed({
+                if (delivered) return@postDelayed
+                delivered = true
+                cancellationSignal.cancel()
+                callback(lastKnownLocation())
+            }, CURRENT_LOCATION_TIMEOUT_MS)
             locationManager.getCurrentLocation(
                 provider,
-                CancellationSignal(),
+                cancellationSignal,
                 mainExecutor,
                 Consumer<Location?> { location ->
+                    if (delivered) return@Consumer
+                    delivered = true
                     callback(location?.let(EmergencyLocation::from) ?: lastKnownLocation())
                 }
             )
@@ -67,6 +77,10 @@ class LocationProvider(private val context: Context, private val logger: Emergen
 
             @Deprecated("Deprecated in Android framework")
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+
+            override fun onProviderEnabled(provider: String) = Unit
+
+            override fun onProviderDisabled(provider: String) = Unit
         }
 
         runCatching {
@@ -106,6 +120,10 @@ class LocationProvider(private val context: Context, private val logger: Emergen
 
             @Deprecated("Deprecated in Android framework")
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+
+            override fun onProviderEnabled(provider: String) = Unit
+
+            override fun onProviderDisabled(provider: String) = Unit
         }
 
         return runCatching {

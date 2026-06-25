@@ -51,7 +51,6 @@ class EmergencyCoordinator(private val context: Context) {
                 val incidentId = response?.incidentId
 
                 stateStore.setActiveEmergency(request.emergencyId, incidentId)
-                startEmergencyTracking(request.emergencyId, incidentId)
 
                 val uploadSummary = evidenceUploader.uploadAvailableEvidence(request.emergencyId, incidentId)
                 logger.event(
