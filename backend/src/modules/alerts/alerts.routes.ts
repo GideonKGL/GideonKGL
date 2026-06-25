@@ -105,9 +105,10 @@ alertsRouter.patch(
   requireRoles("ADMIN", "DISPATCHER", "RESPONDER"),
   validate(statusSchema),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const alertId = String(req.params.id);
     const status = req.body.status as AlertStatus;
     const alert = await prisma.emergencyAlert.update({
-      where: { id: req.params.id },
+      where: { id: alertId },
       data: {
         status,
         acknowledgedBy: status === "ACKNOWLEDGED" ? req.user!.id : undefined,

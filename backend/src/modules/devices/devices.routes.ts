@@ -80,8 +80,9 @@ devicesRouter.get(
 devicesRouter.get(
   "/:id",
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const deviceId = String(req.params.id);
     const device = await prisma.device.findUnique({
-      where: { id: req.params.id },
+      where: { id: deviceId },
       include: {
         user: { select: { id: true, email: true, firstName: true, lastName: true } },
         locations: { orderBy: { recordedAt: "desc" }, take: 1 }
@@ -106,8 +107,9 @@ devicesRouter.patch(
   requireRoles("ADMIN"),
   validate(updateDeviceSchema),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const deviceId = String(req.params.id);
     const device = await prisma.device.update({
-      where: { id: req.params.id },
+      where: { id: deviceId },
       data: req.body
     });
     await audit({

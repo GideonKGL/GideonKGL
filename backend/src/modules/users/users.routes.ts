@@ -79,15 +79,16 @@ usersRouter.patch(
   requireRoles("ADMIN"),
   validate(roleAssignmentSchema),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const targetUserId = String(req.params.id);
     const roles = await prisma.role.findMany({ where: { name: { in: req.body.roles } } });
     if (roles.length !== req.body.roles.length) {
       throw new HttpError(400, "One or more roles are invalid", "INVALID_ROLES");
     }
 
     await prisma.$transaction([
-      prisma.userRole.deleteMany({ where: { userId: req.params.id } }),
+      prisma.userRole.deleteMany({ where: { userId: targetUserId } }),
       prisma.userRole.createMany({
-        data: roles.map((role) => ({ userId: req.params.id, roleId: role.id })),
+        data: roles.map((role) => ({ userId: targetUserId, roleId: role.id })),
         skipDuplicates: true
       })
     ]);
@@ -96,11 +97,11 @@ usersRouter.patch(
       actorId: req.user!.id,
       action: "users.roles.update",
       entity: "users",
-      entityId: req.params.id,
+      entityId: targetUserId,
       metadata: { roles: req.body.roles }
     });
 
-    const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: publicUserSelect });
+    const user = await prisma.user.findUnique({ where: { id: targetUserId }, select: publicUserSelect });
     res.json(user);
   })
 );

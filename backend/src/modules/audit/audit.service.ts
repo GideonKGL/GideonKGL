@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
 
 export type AuditInput = {
@@ -5,7 +6,7 @@ export type AuditInput = {
   action: string;
   entity: string;
   entityId?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonValue;
   ipAddress?: string;
   userAgent?: string;
 };

@@ -1,4 +1,5 @@
-import admin from "firebase-admin";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
 import { prisma } from "../../config/prisma.js";
 import { env } from "../../config/env.js";
 import { logger } from "../../config/logger.js";
@@ -6,9 +7,9 @@ import { emitUser } from "../../realtime/events.js";
 
 const hasFirebaseConfig = env.FIREBASE_PROJECT_ID && env.FIREBASE_CLIENT_EMAIL && env.FIREBASE_PRIVATE_KEY;
 
-if (hasFirebaseConfig && admin.apps.length === 0) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
+if (hasFirebaseConfig && getApps().length === 0) {
+  initializeApp({
+    credential: cert({
       projectId: env.FIREBASE_PROJECT_ID,
       clientEmail: env.FIREBASE_CLIENT_EMAIL,
       privateKey: env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n")
@@ -43,7 +44,7 @@ export const notificationService = {
     if (hasFirebaseConfig && devices.length > 0) {
       await Promise.allSettled(
         devices.map((device) =>
-          admin.messaging().send({
+          getMessaging().send({
             token: device.fcmToken!,
             notification: { title: input.title, body: input.body },
             data: input.data

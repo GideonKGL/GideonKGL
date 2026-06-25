@@ -44,8 +44,9 @@ notificationsRouter.get(
 notificationsRouter.patch(
   "/:id/read",
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const notificationId = String(req.params.id);
     const notification = await prisma.notification.update({
-      where: { id: req.params.id },
+      where: { id: notificationId },
       data: { readAt: new Date() }
     });
     res.json(notification);

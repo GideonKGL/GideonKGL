@@ -8,7 +8,7 @@ export const validate =
       body: req.body,
       params: req.params,
       query: req.query
-    });
+    }) as { body?: unknown; params?: Request["params"]; query?: Request["query"] };
 
     req.body = parsed.body ?? req.body;
     req.params = parsed.params ?? req.params;
