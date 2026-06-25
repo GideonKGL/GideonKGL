@@ -12,7 +12,7 @@ const demoDataEnabled = import.meta.env.VITE_DEMO_DATA !== "false";
 
 export function useMonitoringData() {
   const [state, dispatch] = useReducer(monitoringReducer, initialMonitoringState);
-  const latestAlertRef = useRef<SosAlert | undefined>(state.sosAlerts[0]);
+  const latestAlertRef = useRef<SosAlert | undefined>(undefined);
 
   useEffect(() => {
     const subscription = createRealtimeClient({

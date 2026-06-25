@@ -3,6 +3,10 @@ import path from "node:path";
 
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
 
+if (process.platform === "win32") {
+  app.setAppUserModelId("com.monitoring.console");
+}
+
 function createMainWindow(): BrowserWindow {
   const preloadPath = path.join(__dirname, "../preload/index.js");
 
@@ -19,7 +23,7 @@ function createMainWindow(): BrowserWindow {
       preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
       webSecurity: true
     }
   });

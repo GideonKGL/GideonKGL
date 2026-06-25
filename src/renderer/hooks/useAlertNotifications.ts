@@ -31,7 +31,7 @@ function playAlertTone() {
 export function useAlertNotifications(latestAlert?: SosAlert) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [desktopNotificationsEnabled, setDesktopNotificationsEnabled] = useState(false);
-  const lastAlertId = useRef<string | undefined>();
+  const lastAlertId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!("Notification" in window)) {
