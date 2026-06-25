@@ -60,7 +60,7 @@ function Console({ onLogout }: { onLogout: () => void }) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [query, setQuery] = useState("");
-  const alarmContext = useRef<AudioContext>();
+  const alarmContext = useRef<AudioContext | null>(null);
 
   const load = () => {
     api<Alert[]>("/alerts").then(setAlerts).catch(console.error);
@@ -162,7 +162,7 @@ function Console({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-function playAlarm(contextRef: React.MutableRefObject<AudioContext | undefined>) {
+function playAlarm(contextRef: React.MutableRefObject<AudioContext | null>) {
   const context = contextRef.current ?? new AudioContext();
   contextRef.current = context;
   const oscillator = context.createOscillator();
