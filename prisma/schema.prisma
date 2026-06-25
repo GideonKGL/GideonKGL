@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  RESPONDER
+  DISPATCHER
+  ADMIN
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+  WEB
+  OTHER
+}
+
+enum DeviceStatus {
+  ACTIVE
+  INACTIVE
+  REVOKED
+}
+
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  CANCELLED
+}
+
+enum IncidentStatus {
+  REPORTED
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NotificationType {
+  SYSTEM
+  SOS
+  INCIDENT
+  DEVICE
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+  SMS
+}
+
+enum FileOwnerType {
+  USER
+  SOS_ALERT
+  INCIDENT
+}
+
+model User {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  phone             String?        @unique
+  passwordHash      String?
+  pinHash           String?
+  firebaseUid       String?        @unique
+  firstName         String
+  lastName          String
+  role              Role           @default(USER)
+  isActive          Boolean        @default(true)
+  lastLoginAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  devices           Device[]
+  locations         GpsLocation[]
+  sosAlerts         SosAlert[]     @relation("UserSosAlerts")
+  acknowledgedAlerts SosAlert[]    @relation("AcknowledgedAlerts")
+  resolvedAlerts    SosAlert[]     @relation("ResolvedAlerts")
+  reportedIncidents Incident[]     @relation("ReportedIncidents")
+  assignedIncidents Incident[]     @relation("AssignedIncidents")
+  notifications     Notification[]
+  uploads           FileUpload[]
+
+  @@index([role])
+  @@index([isActive])
+}
+
+model Device {
+  id             String         @id @default(cuid())
+  userId         String
+  deviceId       String         @unique
+  name           String?
+  platform       DevicePlatform
+  pushToken      String?
+  status         DeviceStatus   @default(ACTIVE)
+  lastSeenAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locations      GpsLocation[]
+  sosAlerts      SosAlert[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model GpsLocation {
+  id          String   @id @default(cuid())
+  userId      String
+  deviceId    String?
+  latitude    Float
+  longitude   Float
+  accuracy    Float?
+  altitude    Float?
+  speed       Float?
+  heading     Float?
+  recordedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device      Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, recordedAt])
+  @@index([deviceId, recordedAt])
+}
+
+model SosAlert {
+  id              String       @id @default(cuid())
+  userId          String
+  deviceId        String?
+  status          AlertStatus  @default(ACTIVE)
+  latitude        Float
+  longitude       Float
+  message         String?
+  metadata        Json?
+  acknowledgedById String?
+  acknowledgedAt  DateTime?
+  resolvedById    String?
+  resolvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user            User         @relation("UserSosAlerts", fields: [userId], references: [id], onDelete: Cascade)
+  device          Device?      @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  acknowledgedBy  User?        @relation("AcknowledgedAlerts", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  resolvedBy      User?        @relation("ResolvedAlerts", fields: [resolvedById], references: [id], onDelete: SetNull)
+  incident        Incident?
+  uploads         FileUpload[]
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Incident {
+  id           String           @id @default(cuid())
+  reporterId   String
+  assigneeId   String?
+  sosAlertId   String?          @unique
+  title        String
+  description  String?
+  severity     IncidentSeverity @default(MEDIUM)
+  status       IncidentStatus   @default(REPORTED)
+  latitude     Float?
+  longitude    Float?
+  metadata     Json?
+  resolvedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  reporter     User             @relation("ReportedIncidents", fields: [reporterId], references: [id], onDelete: Cascade)
+  assignee     User?            @relation("AssignedIncidents", fields: [assigneeId], references: [id], onDelete: SetNull)
+  sosAlert     SosAlert?        @relation(fields: [sosAlertId], references: [id], onDelete: SetNull)
+  uploads      FileUpload[]
+
+  @@index([status, severity])
+  @@index([reporterId])
+  @@index([assigneeId])
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      NotificationType    @default(SYSTEM)
+  channel   NotificationChannel @default(IN_APP)
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([type, createdAt])
+}
+
+model FileUpload {
+  id           String        @id @default(cuid())
+  uploaderId   String
+  incidentId   String?
+  sosAlertId   String?
+  ownerType    FileOwnerType
+  originalName String
+  filename     String
+  mimeType     String
+  size         Int
+  path         String
+  url          String
+  createdAt    DateTime      @default(now())
+
+  uploader     User          @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  incident     Incident?     @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  sosAlert     SosAlert?     @relation(fields: [sosAlertId], references: [id], onDelete: Cascade)
+
+  @@index([uploaderId])
+  @@index([incidentId])
+  @@index([sosAlertId])
+}
