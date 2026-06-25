@@ -23,7 +23,9 @@ services:
     region: ohio
     # Install only the backend workspace (avoids the Electron download from the
     # desktop workspace), generate the Prisma client, then compile TypeScript.
-    buildCommand: npm ci -w @guardian/backend && npm run prisma:generate -w @guardian/backend && npm run build -w @guardian/backend
+    # --include=dev forces TypeScript/@types to install even though NODE_ENV is
+    # production (npm would otherwise omit devDependencies and break tsc).
+    buildCommand: npm ci --include=dev -w @guardian/backend && npm run prisma:generate -w @guardian/backend && npm run build -w @guardian/backend
     # Apply migrations and seed roles/admin (both idempotent) before starting.
     startCommand: npm run migrate -w @guardian/backend && npm run seed -w @guardian/backend && node backend/dist/server.js
     healthCheckPath: /api/health/db
@@ -50,7 +52,7 @@ services:
   - type: web
     name: guardian-tracker-web
     runtime: static
-    buildCommand: npm ci -w @guardian/web && npm run build -w @guardian/web
+    buildCommand: npm ci --include=dev -w @guardian/web && npm run build -w @guardian/web
     staticPublishPath: web/dist
     envVars:
       - key: NODE_VERSION
