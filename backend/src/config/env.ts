@@ -15,6 +15,20 @@ const schema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional()
 });
 
-export const env = schema.parse(process.env);
+const parsed = schema.safeParse(process.env);
+
+if (!parsed.success) {
+  const issues = parsed.error.issues
+    .map((issue) => `  - ${issue.path.join(".") || "(root)"}: ${issue.message}`)
+    .join("\n");
+
+  // Fail fast with a clear, actionable message instead of a raw ZodError dump.
+  // DATABASE_URL is required here: a missing or malformed value is reported by
+  // name so deployment misconfiguration (e.g. an unset Render connection
+  // string) is obvious at startup.
+  throw new Error(`Invalid environment configuration:\n${issues}`);
+}
+
+export const env = parsed.data;
 
 export const allowedOrigins = [env.WEB_ORIGIN, env.DESKTOP_ORIGIN];
