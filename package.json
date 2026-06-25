@@ -11,6 +11,9 @@
     "build": "npm run build --workspaces",
     "backend:dev": "npm run dev -w @guardian/backend",
     "web:dev": "npm run dev -w @guardian/web",
-    "desktop:dev": "npm run dev -w @guardian/desktop"
+    "desktop:dev": "npm run dev -w @guardian/desktop",
+    "live:backend": "npm run start -w @guardian/backend",
+    "live:web": "npm run preview -w @guardian/web -- --host 0.0.0.0 --port 5173",
+    "live:device": "node tools/live-device-sim.mjs"
   }
 }
