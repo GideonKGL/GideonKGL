@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Emergency Response</string>
+    <string name="emergency_backend_base_url">https://example.invalid/api</string>
+</resources>
